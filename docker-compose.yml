@@ -1,0 +1,29 @@
+services:
+  mongo:
+    image: mongo:8
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: cuties
+      MONGO_INITDB_ROOT_PASSWORD: cuties
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet -u cuties -p cuties --authenticationDatabase admin --eval \"db.adminCommand('ping').ok\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  server:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file: .env
+    environment:
+      MONGODB_URI: mongodb://cuties:cuties@mongo:27017/cuties?authSource=admin
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  mongo-data:
