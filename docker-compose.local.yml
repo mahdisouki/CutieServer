@@ -1,0 +1,7 @@
+services:
+  mongo:
+    ports:
+      - "27017:27017"
+  server:
+    ports:
+      - "3000:3000"
