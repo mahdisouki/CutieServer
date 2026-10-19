@@ -23,6 +23,8 @@ const orderBody = z
   })
   .strict();
 
+const deliveryFee = 7;
+
 const statusBody = z
   .object({
     status: z.enum(["new", "confirmed", "fulfilled", "cancelled"]),
@@ -39,9 +41,15 @@ function presentOrder(order: {
   postalCode: string;
   items: { productId: string; quantity: number; name: string; price: number }[];
   subtotal: number;
+  deliveryFee?: number;
+  total?: number;
+  paymentMethod?: string;
   status: string;
   createdAt: Date;
 }) {
+  if (order.deliveryFee == null || order.total == null || order.paymentMethod == null) {
+    throw new HttpError(500, `Order ${order._id.toString()} is missing a delivery fee`);
+  }
   return {
     id: order._id.toString(),
     email: order.email,
@@ -52,6 +60,9 @@ function presentOrder(order: {
     postalCode: order.postalCode,
     items: order.items,
     subtotal: order.subtotal,
+    deliveryFee: order.deliveryFee,
+    total: order.total,
+    paymentMethod: order.paymentMethod,
     status: order.status,
     createdAt: order.createdAt.toISOString(),
   };
@@ -89,6 +100,9 @@ export function orderRoutes(jwtSecret: string) {
         postalCode: body.postalCode,
         items,
         subtotal,
+        deliveryFee,
+        total: subtotal + deliveryFee,
+        paymentMethod: "cash",
         status: "new",
       });
       res.status(201).json(presentOrder(order));
