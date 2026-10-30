@@ -9,7 +9,11 @@ async function seed() {
   await connectDb(env.mongodbUri);
 
   for (const product of catalog) {
-    await Product.findOneAndUpdate({ slug: product.slug }, product, { upsert: true, runValidators: true });
+    await Product.findOneAndUpdate(
+      { slug: product.slug },
+      { $set: product, $unset: { image: "", quantity: "" } },
+      { upsert: true, runValidators: true },
+    );
   }
 
   const admin = await Admin.findOne({ email: env.adminEmail.toLowerCase() });

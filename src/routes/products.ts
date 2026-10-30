@@ -1,8 +1,25 @@
+import { Readable } from "node:stream";
 import { Router } from "express";
+import multer from "multer";
 import { z } from "zod";
 import { requireAuth } from "../auth";
+import { cloudinary } from "../cloudinary";
 import { asyncRoute, HttpError } from "../http";
 import { Product } from "../models";
+
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter(_req, file, cb) {
+    if (!ALLOWED_IMAGE_TYPES.has(file.mimetype)) {
+      cb(new HttpError(400, "Image must be jpeg, png, or webp"));
+      return;
+    }
+    cb(null, true);
+  },
+});
 
 const locales = ["en", "fr", "ar"] as const;
 type Locale = (typeof locales)[number];
@@ -14,20 +31,33 @@ const translationSchema = z.object({
   label: z.string().trim().min(1).optional(),
 });
 
+const variantSchema = z.object({
+  id: z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Variant id must use lowercase letters, numbers, and hyphens"),
+  color: z.string().trim().min(1),
+  image: z.string().trim().url(),
+  quantity: z.number().int().nonnegative(),
+});
+
 const productBody = z
   .object({
     slug: z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must use lowercase letters, numbers, and hyphens"),
     category: z.enum(["Rings", "Necklaces", "Bracelets", "Watches"]),
     price: z.number().int().nonnegative(),
-    image: z.string().trim().url(),
     position: z.number().int().nonnegative(),
+    variants: z.array(variantSchema).min(1),
     translations: z.object({
       en: translationSchema,
       fr: translationSchema,
       ar: translationSchema,
     }),
   })
-  .strict();
+  .strict()
+  .superRefine((body, ctx) => {
+    const ids = body.variants.map((variant) => variant.id);
+    if (new Set(ids).size !== ids.length) {
+      ctx.addIssue({ code: "custom", message: "Variant ids must be unique within a product", path: ["variants"] });
+    }
+  });
 
 type StoredTranslation = {
   name: string;
@@ -36,12 +66,19 @@ type StoredTranslation = {
   label?: string | null;
 };
 
+type StoredVariant = {
+  id: string;
+  color: string;
+  image: string;
+  quantity: number;
+};
+
 type StoredProduct = {
   slug: string;
   category: string;
   price: number;
-  image: string;
   position: number;
+  variants?: StoredVariant[] | null;
   translations?: {
     en?: StoredTranslation | null;
     fr?: StoredTranslation | null;
@@ -57,14 +94,29 @@ function translation(product: StoredProduct, locale: Locale) {
   return text;
 }
 
+function presentVariants(product: StoredProduct) {
+  if (!product.variants || product.variants.length === 0) {
+    throw new HttpError(500, `Missing variants for ${product.slug}`);
+  }
+  return product.variants.map((variant) => ({
+    id: variant.id,
+    color: variant.color,
+    image: variant.image,
+    quantity: variant.quantity,
+  }));
+}
+
 function presentProduct(product: StoredProduct, locale?: Locale) {
+  const variants = presentVariants(product);
   if (!locale) {
     return {
       id: product.slug,
       category: product.category,
       price: product.price,
-      image: product.image,
       position: product.position,
+      variants,
+      image: variants[0].image,
+      quantity: variants.reduce((sum, variant) => sum + variant.quantity, 0),
       translations: {
         en: translation(product, "en"),
         fr: translation(product, "fr"),
@@ -77,7 +129,9 @@ function presentProduct(product: StoredProduct, locale?: Locale) {
     id: product.slug,
     category: product.category,
     price: product.price,
-    image: product.image,
+    variants,
+    image: variants[0].image,
+    quantity: variants.reduce((sum, variant) => sum + variant.quantity, 0),
     name: text.name,
     material: text.material,
     description: text.description,
@@ -91,6 +145,26 @@ function readLocale(value: unknown) {
   throw new HttpError(400, "locale must be en, fr, or ar");
 }
 
+function uploadToCloudinary(buffer: Buffer) {
+  return new Promise<{ secure_url: string }>((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: "cuties/products", resource_type: "image" },
+      (error, result) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        if (!result?.secure_url) {
+          reject(new HttpError(500, "Cloudinary upload returned no URL"));
+          return;
+        }
+        resolve({ secure_url: result.secure_url });
+      },
+    );
+    Readable.from(buffer).pipe(stream);
+  });
+}
+
 export function productRoutes(jwtSecret: string) {
   const router = Router();
   const staff = requireAuth(jwtSecret);
@@ -101,6 +175,17 @@ export function productRoutes(jwtSecret: string) {
       const locale = readLocale(req.query.locale);
       const products = await Product.find().sort({ position: 1, slug: 1 });
       res.json(products.map((product) => presentProduct(product, locale)));
+    }),
+  );
+
+  router.post(
+    "/upload",
+    staff,
+    upload.single("file"),
+    asyncRoute(async (req, res) => {
+      if (!req.file) throw new HttpError(400, "Missing image file");
+      const result = await uploadToCloudinary(req.file.buffer);
+      res.status(201).json({ image: result.secure_url });
     }),
   );
 

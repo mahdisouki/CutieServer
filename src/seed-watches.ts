@@ -8,13 +8,14 @@ import { Product } from "./models";
 
 const watchesDir = path.resolve(__dirname, "../assets/watches");
 
-type WatchSeed = Omit<CatalogProduct, "image"> & { file: string };
+type WatchSeed = Omit<CatalogProduct, "variants"> & { file: string; quantity: number };
 
 const watches: WatchSeed[] = [
   {
     slug: "cartier-panthere-diamond",
     category: "Watches",
     price: 4200,
+    quantity: 10,
     position: 8,
     file: "cartier-panthere-diamond.webp",
     translations: {
@@ -45,6 +46,7 @@ const watches: WatchSeed[] = [
     slug: "patek-philippe-black-diamond",
     category: "Watches",
     price: 5800,
+    quantity: 10,
     position: 9,
     file: "patek-philippe-black-diamond.jpg",
     translations: {
@@ -75,6 +77,7 @@ const watches: WatchSeed[] = [
     slug: "michael-kors-silver-crystal",
     category: "Watches",
     price: 980,
+    quantity: 10,
     position: 10,
     file: "michael-kors-silver-crystal.jpg",
     translations: {
@@ -105,6 +108,7 @@ const watches: WatchSeed[] = [
     slug: "michael-kors-navy-twotone",
     category: "Watches",
     price: 1120,
+    quantity: 10,
     position: 11,
     file: "michael-kors-navy-twotone.jpg",
     translations: {
@@ -135,6 +139,7 @@ const watches: WatchSeed[] = [
     slug: "chopard-gold-roman",
     category: "Watches",
     price: 3200,
+    quantity: 10,
     position: 12,
     file: "chopard-gold-roman.jpg",
     translations: {
@@ -165,6 +170,7 @@ const watches: WatchSeed[] = [
     slug: "michael-kors-cream-twotone",
     category: "Watches",
     price: 1050,
+    quantity: 10,
     position: 13,
     file: "michael-kors-cream-twotone.jpg",
     translations: {
@@ -192,6 +198,7 @@ const watches: WatchSeed[] = [
     slug: "michael-kors-pave-mk-logo",
     category: "Watches",
     price: 1180,
+    quantity: 10,
     position: 14,
     file: "michael-kors-pave-mk-logo.jpg",
     translations: {
@@ -222,6 +229,7 @@ const watches: WatchSeed[] = [
     slug: "gucci-gold-honeycomb",
     category: "Watches",
     price: 1650,
+    quantity: 10,
     position: 15,
     file: "gucci-gold-honeycomb.jpg",
     translations: {
@@ -252,6 +260,7 @@ const watches: WatchSeed[] = [
     slug: "michael-kors-rosegold-crystal",
     category: "Watches",
     price: 1100,
+    quantity: 10,
     position: 16,
     file: "michael-kors-rosegold-crystal.jpg",
     translations: {
@@ -279,6 +288,7 @@ const watches: WatchSeed[] = [
     slug: "patek-philippe-gold-diamond",
     category: "Watches",
     price: 6200,
+    quantity: 10,
     position: 17,
     file: "patek-philippe-gold-diamond.jpg",
     translations: {
@@ -309,6 +319,7 @@ const watches: WatchSeed[] = [
     slug: "dior-gold-honeycomb",
     category: "Watches",
     price: 2400,
+    quantity: 10,
     position: 18,
     file: "dior-gold-honeycomb.jpg",
     translations: {
@@ -339,6 +350,7 @@ const watches: WatchSeed[] = [
     slug: "gucci-twotone-honeycomb",
     category: "Watches",
     price: 1580,
+    quantity: 10,
     position: 19,
     file: "gucci-twotone-honeycomb.jpg",
     translations: {
@@ -366,6 +378,7 @@ const watches: WatchSeed[] = [
     slug: "michael-kors-gold-pave-mk",
     category: "Watches",
     price: 1250,
+    quantity: 10,
     position: 20,
     file: "michael-kors-gold-pave-mk.jpg",
     translations: {
@@ -396,6 +409,7 @@ const watches: WatchSeed[] = [
     slug: "michael-kors-twotone-chrono",
     category: "Watches",
     price: 1350,
+    quantity: 10,
     position: 21,
     file: "michael-kors-twotone-chrono.jpg",
     translations: {
@@ -423,6 +437,7 @@ const watches: WatchSeed[] = [
     slug: "versace-gold-medusa",
     category: "Watches",
     price: 1480,
+    quantity: 10,
     position: 22,
     file: "versace-gold-medusa.jpg",
     translations: {
@@ -453,6 +468,7 @@ const watches: WatchSeed[] = [
     slug: "michael-kors-silver-chrono",
     category: "Watches",
     price: 1280,
+    quantity: 10,
     position: 23,
     file: "michael-kors-silver-chrono.jpg",
     translations: {
@@ -480,6 +496,7 @@ const watches: WatchSeed[] = [
     slug: "dior-navy-twotone",
     category: "Watches",
     price: 2600,
+    quantity: 10,
     position: 24,
     file: "dior-navy-twotone.jpg",
     translations: {
@@ -510,6 +527,7 @@ const watches: WatchSeed[] = [
     slug: "michael-kors-gold-crystal",
     category: "Watches",
     price: 1150,
+    quantity: 10,
     position: 25,
     file: "michael-kors-gold-crystal.jpg",
     translations: {
@@ -567,22 +585,23 @@ async function seedWatches() {
       slug: watch.slug,
       category: watch.category,
       price: watch.price,
-      image: upload.secure_url,
       position: watch.position,
+      variants: [{ id: "default", color: "Default", image: upload.secure_url, quantity: watch.quantity }],
       translations: watch.translations,
     };
 
-    await Product.findOneAndUpdate({ slug: product.slug }, product, {
-      upsert: true,
-      runValidators: true,
-    });
+    await Product.findOneAndUpdate(
+      { slug: product.slug },
+      { $set: product, $unset: { image: "", quantity: "" } },
+      { upsert: true, runValidators: true },
+    );
 
     seeded.push(product);
-    console.log(`Uploaded ${product.slug} → ${product.image}`);
+    console.log(`Uploaded ${product.slug} → ${product.variants[0].image}`);
   }
 
   console.log(`Seeded ${seeded.length} watches`);
-  console.log(JSON.stringify(seeded.map((p) => ({ slug: p.slug, image: p.image })), null, 2));
+  console.log(JSON.stringify(seeded.map((p) => ({ slug: p.slug, image: p.variants[0].image })), null, 2));
 
   await mongoose.disconnect();
 }

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import mongoose from "mongoose";
 import { z } from "zod";
 import { requireAuth } from "../auth";
 import { asyncRoute, HttpError } from "../http";
@@ -16,6 +17,7 @@ const orderBody = z
       .array(
         z.object({
           productId: z.string().trim().min(1),
+          variantId: z.string().trim().min(1),
           quantity: z.number().int().positive(),
         }),
       )
@@ -31,6 +33,15 @@ const statusBody = z
   })
   .strict();
 
+type OrderItem = {
+  productId: string;
+  variantId: string;
+  quantity: number;
+  name: string;
+  color: string;
+  price: number;
+};
+
 function presentOrder(order: {
   _id: { toString(): string };
   email: string;
@@ -39,7 +50,7 @@ function presentOrder(order: {
   address: string;
   city: string;
   postalCode: string;
-  items: { productId: string; quantity: number; name: string; price: number }[];
+  items: OrderItem[];
   subtotal: number;
   deliveryFee?: number;
   total?: number;
@@ -76,36 +87,78 @@ export function orderRoutes(jwtSecret: string) {
     "/",
     asyncRoute(async (req, res) => {
       const body = orderBody.parse(req.body);
-      const items = [];
-      let subtotal = 0;
+
+      const requestedByKey = new Map<string, number>();
       for (const item of body.items) {
-        const product = await Product.findOne({ slug: item.productId });
-        if (!product) throw new HttpError(400, `Unknown product ${item.productId}`);
-        const englishName = product.translations?.en?.name;
-        if (!englishName) throw new HttpError(500, `Missing en translation for ${product.slug}`);
-        items.push({
-          productId: product.slug,
-          quantity: item.quantity,
-          name: englishName,
-          price: product.price,
-        });
-        subtotal += product.price * item.quantity;
+        const key = `${item.productId}::${item.variantId}`;
+        requestedByKey.set(key, (requestedByKey.get(key) ?? 0) + item.quantity);
       }
-      const order = await Order.create({
-        email: body.email,
-        firstName: body.firstName,
-        lastName: body.lastName,
-        address: body.address,
-        city: body.city,
-        postalCode: body.postalCode,
-        items,
-        subtotal,
-        deliveryFee,
-        total: subtotal + deliveryFee,
-        paymentMethod: "cash",
-        status: "new",
-      });
-      res.status(201).json(presentOrder(order));
+
+      const session = await mongoose.startSession();
+      session.startTransaction();
+      try {
+        const items: OrderItem[] = [];
+        let subtotal = 0;
+
+        for (const item of body.items) {
+          const product = await Product.findOne({ slug: item.productId }).session(session);
+          if (!product) throw new HttpError(400, `Unknown product ${item.productId}`);
+          const variant = product.variants.find((entry) => entry.id === item.variantId);
+          if (!variant) throw new HttpError(400, `Unknown variant ${item.variantId} for ${item.productId}`);
+          const englishName = product.translations?.en?.name;
+          if (!englishName) throw new HttpError(500, `Missing en translation for ${product.slug}`);
+          items.push({
+            productId: product.slug,
+            variantId: variant.id,
+            quantity: item.quantity,
+            name: englishName,
+            color: variant.color,
+            price: product.price,
+          });
+          subtotal += product.price * item.quantity;
+        }
+
+        for (const [key, requested] of requestedByKey) {
+          const [slug, variantId] = key.split("::");
+          const product = await Product.findOne({ slug }).session(session);
+          if (!product) throw new HttpError(400, `Unknown product ${slug}`);
+          const variant = product.variants.find((entry) => entry.id === variantId);
+          if (!variant) throw new HttpError(400, `Unknown variant ${variantId} for ${slug}`);
+          if (requested > variant.quantity) {
+            throw new HttpError(400, `Not enough stock for ${slug}/${variantId}`);
+          }
+          variant.quantity -= requested;
+          await product.save({ session });
+        }
+
+        const [order] = await Order.create(
+          [
+            {
+              email: body.email,
+              firstName: body.firstName,
+              lastName: body.lastName,
+              address: body.address,
+              city: body.city,
+              postalCode: body.postalCode,
+              items,
+              subtotal,
+              deliveryFee,
+              total: subtotal + deliveryFee,
+              paymentMethod: "cash",
+              status: "new",
+            },
+          ],
+          { session },
+        );
+
+        await session.commitTransaction();
+        res.status(201).json(presentOrder(order));
+      } catch (error) {
+        await session.abortTransaction();
+        throw error;
+      } finally {
+        session.endSession();
+      }
     }),
   );
 

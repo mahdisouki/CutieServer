@@ -7,12 +7,19 @@ export type Translation = {
   label?: string;
 };
 
+export type ProductVariant = {
+  id: string;
+  color: string;
+  image: string;
+  quantity: number;
+};
+
 export type CatalogProduct = {
   slug: string;
   category: Category;
   price: number;
-  image: string;
   position: number;
+  variants: ProductVariant[];
   translations: { en: Translation; fr: Translation; ar: Translation };
 };
 
@@ -21,7 +28,7 @@ export const catalog: CatalogProduct[] = [
     slug: "solis-necklace",
     category: "Necklaces",
     price: 580,
-    image: "https://images.unsplash.com/photo-1722410180644-5955f83ec8b1?auto=format&fit=crop&w=1200&q=85",
+    variants: [{ id: "default", color: "Default", image: "https://images.unsplash.com/photo-1722410180644-5955f83ec8b1?auto=format&fit=crop&w=1200&q=85", quantity: 10 }],
     position: 0,
     translations: {
       en: {
@@ -48,7 +55,7 @@ export const catalog: CatalogProduct[] = [
     slug: "elan-diamond-ring",
     category: "Rings",
     price: 1240,
-    image: "https://images.unsplash.com/photo-1611955167811-4711904bb9f8?auto=format&fit=crop&w=1200&q=85",
+    variants: [{ id: "default", color: "Default", image: "https://images.unsplash.com/photo-1611955167811-4711904bb9f8?auto=format&fit=crop&w=1200&q=85", quantity: 10 }],
     position: 1,
     translations: {
       en: {
@@ -75,7 +82,7 @@ export const catalog: CatalogProduct[] = [
     slug: "dune-signet",
     category: "Rings",
     price: 690,
-    image: "https://images.unsplash.com/photo-1689367436629-1d288f1e23b6?auto=format&fit=crop&w=1200&q=85",
+    variants: [{ id: "default", color: "Default", image: "https://images.unsplash.com/photo-1689367436629-1d288f1e23b6?auto=format&fit=crop&w=1200&q=85", quantity: 10 }],
     position: 2,
     translations: {
       en: {
@@ -99,7 +106,7 @@ export const catalog: CatalogProduct[] = [
     slug: "aria-pendant",
     category: "Necklaces",
     price: 460,
-    image: "https://images.unsplash.com/photo-1673131158657-4404fd1f041a?auto=format&fit=crop&w=1200&q=85",
+    variants: [{ id: "default", color: "Default", image: "https://images.unsplash.com/photo-1673131158657-4404fd1f041a?auto=format&fit=crop&w=1200&q=85", quantity: 10 }],
     position: 3,
     translations: {
       en: {
@@ -126,7 +133,7 @@ export const catalog: CatalogProduct[] = [
     slug: "luna-gold-watch",
     category: "Watches",
     price: 1850,
-    image: "https://images.unsplash.com/photo-1760532466984-39c3eb7f1254?auto=format&fit=crop&w=1200&q=85",
+    variants: [{ id: "default", color: "Default", image: "https://images.unsplash.com/photo-1760532466984-39c3eb7f1254?auto=format&fit=crop&w=1200&q=85", quantity: 10 }],
     position: 4,
     translations: {
       en: {
@@ -153,7 +160,7 @@ export const catalog: CatalogProduct[] = [
     slug: "etoile-watch",
     category: "Watches",
     price: 1490,
-    image: "https://images.unsplash.com/photo-1517870536153-52969f5ee838?auto=format&fit=crop&w=1200&q=85",
+    variants: [{ id: "default", color: "Default", image: "https://images.unsplash.com/photo-1517870536153-52969f5ee838?auto=format&fit=crop&w=1200&q=85", quantity: 10 }],
     position: 5,
     translations: {
       en: {
@@ -180,7 +187,7 @@ export const catalog: CatalogProduct[] = [
     slug: "celeste-bracelet",
     category: "Bracelets",
     price: 520,
-    image: "https://images.unsplash.com/photo-1608042314453-ae338d80c427?auto=format&fit=crop&w=1200&q=85",
+    variants: [{ id: "default", color: "Default", image: "https://images.unsplash.com/photo-1608042314453-ae338d80c427?auto=format&fit=crop&w=1200&q=85", quantity: 10 }],
     position: 6,
     translations: {
       en: {
@@ -204,7 +211,7 @@ export const catalog: CatalogProduct[] = [
     slug: "mira-watch",
     category: "Watches",
     price: 1320,
-    image: "https://images.unsplash.com/photo-1760532467646-b9e466403862?auto=format&fit=crop&w=1200&q=85",
+    variants: [{ id: "default", color: "Default", image: "https://images.unsplash.com/photo-1760532467646-b9e466403862?auto=format&fit=crop&w=1200&q=85", quantity: 10 }],
     position: 7,
     translations: {
       en: {
@@ -228,7 +235,7 @@ export const catalog: CatalogProduct[] = [
     slug: "cartier-panthere-diamond",
     category: "Watches",
     price: 4200,
-    image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499074/cuties/watches/cartier-panthere-diamond.webp",
+    variants: [{ id: "default", color: "Default", image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499074/cuties/watches/cartier-panthere-diamond.webp", quantity: 10 }],
     position: 8,
     translations: {
       en: {
@@ -255,7 +262,7 @@ export const catalog: CatalogProduct[] = [
     slug: "patek-philippe-black-diamond",
     category: "Watches",
     price: 5800,
-    image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499074/cuties/watches/patek-philippe-black-diamond.jpg",
+    variants: [{ id: "default", color: "Default", image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499074/cuties/watches/patek-philippe-black-diamond.jpg", quantity: 10 }],
     position: 9,
     translations: {
       en: {
@@ -282,7 +289,7 @@ export const catalog: CatalogProduct[] = [
     slug: "michael-kors-silver-crystal",
     category: "Watches",
     price: 980,
-    image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499075/cuties/watches/michael-kors-silver-crystal.jpg",
+    variants: [{ id: "default", color: "Default", image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499075/cuties/watches/michael-kors-silver-crystal.jpg", quantity: 10 }],
     position: 10,
     translations: {
       en: {
@@ -309,7 +316,7 @@ export const catalog: CatalogProduct[] = [
     slug: "michael-kors-navy-twotone",
     category: "Watches",
     price: 1120,
-    image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499076/cuties/watches/michael-kors-navy-twotone.jpg",
+    variants: [{ id: "default", color: "Default", image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499076/cuties/watches/michael-kors-navy-twotone.jpg", quantity: 10 }],
     position: 11,
     translations: {
       en: {
@@ -336,7 +343,7 @@ export const catalog: CatalogProduct[] = [
     slug: "chopard-gold-roman",
     category: "Watches",
     price: 3200,
-    image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499078/cuties/watches/chopard-gold-roman.jpg",
+    variants: [{ id: "default", color: "Default", image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499078/cuties/watches/chopard-gold-roman.jpg", quantity: 10 }],
     position: 12,
     translations: {
       en: {
@@ -363,7 +370,7 @@ export const catalog: CatalogProduct[] = [
     slug: "michael-kors-cream-twotone",
     category: "Watches",
     price: 1050,
-    image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499078/cuties/watches/michael-kors-cream-twotone.jpg",
+    variants: [{ id: "default", color: "Default", image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499078/cuties/watches/michael-kors-cream-twotone.jpg", quantity: 10 }],
     position: 13,
     translations: {
       en: {
@@ -387,7 +394,7 @@ export const catalog: CatalogProduct[] = [
     slug: "michael-kors-pave-mk-logo",
     category: "Watches",
     price: 1180,
-    image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499079/cuties/watches/michael-kors-pave-mk-logo.jpg",
+    variants: [{ id: "default", color: "Default", image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499079/cuties/watches/michael-kors-pave-mk-logo.jpg", quantity: 10 }],
     position: 14,
     translations: {
       en: {
@@ -414,7 +421,7 @@ export const catalog: CatalogProduct[] = [
     slug: "gucci-gold-honeycomb",
     category: "Watches",
     price: 1650,
-    image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499080/cuties/watches/gucci-gold-honeycomb.jpg",
+    variants: [{ id: "default", color: "Default", image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499080/cuties/watches/gucci-gold-honeycomb.jpg", quantity: 10 }],
     position: 15,
     translations: {
       en: {
@@ -441,7 +448,7 @@ export const catalog: CatalogProduct[] = [
     slug: "michael-kors-rosegold-crystal",
     category: "Watches",
     price: 1100,
-    image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499081/cuties/watches/michael-kors-rosegold-crystal.jpg",
+    variants: [{ id: "default", color: "Default", image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499081/cuties/watches/michael-kors-rosegold-crystal.jpg", quantity: 10 }],
     position: 16,
     translations: {
       en: {
@@ -465,7 +472,7 @@ export const catalog: CatalogProduct[] = [
     slug: "patek-philippe-gold-diamond",
     category: "Watches",
     price: 6200,
-    image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499082/cuties/watches/patek-philippe-gold-diamond.jpg",
+    variants: [{ id: "default", color: "Default", image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499082/cuties/watches/patek-philippe-gold-diamond.jpg", quantity: 10 }],
     position: 17,
     translations: {
       en: {
@@ -492,7 +499,7 @@ export const catalog: CatalogProduct[] = [
     slug: "dior-gold-honeycomb",
     category: "Watches",
     price: 2400,
-    image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499083/cuties/watches/dior-gold-honeycomb.jpg",
+    variants: [{ id: "default", color: "Default", image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499083/cuties/watches/dior-gold-honeycomb.jpg", quantity: 10 }],
     position: 18,
     translations: {
       en: {
@@ -519,7 +526,7 @@ export const catalog: CatalogProduct[] = [
     slug: "gucci-twotone-honeycomb",
     category: "Watches",
     price: 1580,
-    image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499085/cuties/watches/gucci-twotone-honeycomb.jpg",
+    variants: [{ id: "default", color: "Default", image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499085/cuties/watches/gucci-twotone-honeycomb.jpg", quantity: 10 }],
     position: 19,
     translations: {
       en: {
@@ -543,7 +550,7 @@ export const catalog: CatalogProduct[] = [
     slug: "michael-kors-gold-pave-mk",
     category: "Watches",
     price: 1250,
-    image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499085/cuties/watches/michael-kors-gold-pave-mk.jpg",
+    variants: [{ id: "default", color: "Default", image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499085/cuties/watches/michael-kors-gold-pave-mk.jpg", quantity: 10 }],
     position: 20,
     translations: {
       en: {
@@ -570,7 +577,7 @@ export const catalog: CatalogProduct[] = [
     slug: "michael-kors-twotone-chrono",
     category: "Watches",
     price: 1350,
-    image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499086/cuties/watches/michael-kors-twotone-chrono.jpg",
+    variants: [{ id: "default", color: "Default", image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499086/cuties/watches/michael-kors-twotone-chrono.jpg", quantity: 10 }],
     position: 21,
     translations: {
       en: {
@@ -594,7 +601,7 @@ export const catalog: CatalogProduct[] = [
     slug: "versace-gold-medusa",
     category: "Watches",
     price: 1480,
-    image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499088/cuties/watches/versace-gold-medusa.jpg",
+    variants: [{ id: "default", color: "Default", image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499088/cuties/watches/versace-gold-medusa.jpg", quantity: 10 }],
     position: 22,
     translations: {
       en: {
@@ -621,7 +628,7 @@ export const catalog: CatalogProduct[] = [
     slug: "michael-kors-silver-chrono",
     category: "Watches",
     price: 1280,
-    image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499089/cuties/watches/michael-kors-silver-chrono.jpg",
+    variants: [{ id: "default", color: "Default", image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499089/cuties/watches/michael-kors-silver-chrono.jpg", quantity: 10 }],
     position: 23,
     translations: {
       en: {
@@ -645,7 +652,7 @@ export const catalog: CatalogProduct[] = [
     slug: "dior-navy-twotone",
     category: "Watches",
     price: 2600,
-    image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499089/cuties/watches/dior-navy-twotone.jpg",
+    variants: [{ id: "default", color: "Default", image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499089/cuties/watches/dior-navy-twotone.jpg", quantity: 10 }],
     position: 24,
     translations: {
       en: {
@@ -672,7 +679,7 @@ export const catalog: CatalogProduct[] = [
     slug: "michael-kors-gold-crystal",
     category: "Watches",
     price: 1150,
-    image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499090/cuties/watches/michael-kors-gold-crystal.jpg",
+    variants: [{ id: "default", color: "Default", image: "https://res.cloudinary.com/dfxeaeebv/image/upload/v1792499090/cuties/watches/michael-kors-gold-crystal.jpg", quantity: 10 }],
     position: 25,
     translations: {
       en: {

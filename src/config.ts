@@ -9,6 +9,9 @@ export type Env = {
   adminEmail: string;
   adminPassword: string;
   allowedOrigins: string[];
+  cloudinaryCloudName: string;
+  cloudinaryApiKey: string;
+  cloudinaryApiSecret: string;
 };
 
 function requireEnv(name: string) {
@@ -36,5 +39,8 @@ export function readEnv(): Env {
     adminEmail: requireEnv("ADMIN_EMAIL"),
     adminPassword: requireEnv("ADMIN_PASSWORD"),
     allowedOrigins,
+    cloudinaryCloudName: requireEnv("CLOUDINARY_CLOUD_NAME"),
+    cloudinaryApiKey: requireEnv("CLOUDINARY_API_KEY"),
+    cloudinaryApiSecret: requireEnv("CLOUDINARY_API_SECRET"),
   };
 }

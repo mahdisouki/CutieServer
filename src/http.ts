@@ -1,4 +1,5 @@
 import type { NextFunction, Request, RequestHandler, Response } from "express";
+import { MulterError } from "multer";
 import { ZodError } from "zod";
 
 export class HttpError extends Error {
@@ -23,6 +24,14 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
   }
   if (err instanceof ZodError) {
     res.status(400).json({ error: err.issues.map((issue) => issue.message).join(", ") });
+    return;
+  }
+  if (err instanceof MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      res.status(400).json({ error: "Image must be 5MB or smaller" });
+      return;
+    }
+    res.status(400).json({ error: err.message });
     return;
   }
   console.error(err);
