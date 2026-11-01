@@ -5,7 +5,17 @@ import { requireAuth } from "../auth";
 import { asyncRoute, HttpError } from "../http";
 import { Order, Product } from "../models";
 
-const orderBody = z
+const orderItems = z
+  .array(
+    z.object({
+      productId: z.string().trim().min(1),
+      variantId: z.string().trim().min(1),
+      quantity: z.number().int().positive(),
+    }),
+  )
+  .min(1);
+
+const checkoutBody = z
   .object({
     email: z.string().trim().email(),
     firstName: z.string().trim().min(1),
@@ -13,17 +23,20 @@ const orderBody = z
     address: z.string().trim().min(1),
     city: z.string().trim().min(1),
     postalCode: z.string().trim().min(1),
-    items: z
-      .array(
-        z.object({
-          productId: z.string().trim().min(1),
-          variantId: z.string().trim().min(1),
-          quantity: z.number().int().positive(),
-        }),
-      )
-      .min(1),
+    items: orderItems,
   })
   .strict();
+
+const directBody = z
+  .object({
+    name: z.string().trim().min(1),
+    phone: z.string().trim().min(8, "Phone number is too short"),
+    address: z.string().trim().min(1),
+    items: orderItems,
+  })
+  .strict();
+
+const orderBody = z.union([directBody, checkoutBody]);
 
 const deliveryFee = 7;
 
@@ -42,14 +55,23 @@ type OrderItem = {
   price: number;
 };
 
+function customerName(order: { _id: { toString(): string }; name?: string | null; firstName?: string | null; lastName?: string | null }) {
+  if (order.name) return order.name;
+  const combined = [order.firstName, order.lastName].filter((part) => part).join(" ");
+  if (!combined) throw new HttpError(500, `Order ${order._id.toString()} is missing a name`);
+  return combined;
+}
+
 function presentOrder(order: {
   _id: { toString(): string };
-  email: string;
-  firstName: string;
-  lastName: string;
+  name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
   address: string;
-  city: string;
-  postalCode: string;
+  city?: string | null;
+  postalCode?: string | null;
   items: OrderItem[];
   subtotal: number;
   deliveryFee?: number;
@@ -63,12 +85,14 @@ function presentOrder(order: {
   }
   return {
     id: order._id.toString(),
-    email: order.email,
-    firstName: order.firstName,
-    lastName: order.lastName,
+    name: customerName(order),
+    phone: order.phone ?? null,
+    email: order.email ?? null,
+    firstName: order.firstName ?? null,
+    lastName: order.lastName ?? null,
     address: order.address,
-    city: order.city,
-    postalCode: order.postalCode,
+    city: order.city ?? null,
+    postalCode: order.postalCode ?? null,
     items: order.items,
     subtotal: order.subtotal,
     deliveryFee: order.deliveryFee,
@@ -131,15 +155,23 @@ export function orderRoutes(jwtSecret: string) {
           await product.save({ session });
         }
 
+        const customer =
+          "phone" in body
+            ? { name: body.name, phone: body.phone, address: body.address }
+            : {
+                name: `${body.firstName} ${body.lastName}`,
+                email: body.email,
+                firstName: body.firstName,
+                lastName: body.lastName,
+                address: body.address,
+                city: body.city,
+                postalCode: body.postalCode,
+              };
+
         const [order] = await Order.create(
           [
             {
-              email: body.email,
-              firstName: body.firstName,
-              lastName: body.lastName,
-              address: body.address,
-              city: body.city,
-              postalCode: body.postalCode,
+              ...customer,
               items,
               subtotal,
               deliveryFee,

@@ -64,12 +64,14 @@ const orderItemSchema = new mongoose.Schema(
 
 const orderSchema = new mongoose.Schema(
   {
-    email: { type: String, required: true, lowercase: true, trim: true },
-    firstName: { type: String, required: true, trim: true },
-    lastName: { type: String, required: true, trim: true },
+    name: { type: String, trim: true },
+    phone: { type: String, trim: true },
+    email: { type: String, lowercase: true, trim: true },
+    firstName: { type: String, trim: true },
+    lastName: { type: String, trim: true },
     address: { type: String, required: true, trim: true },
-    city: { type: String, required: true, trim: true },
-    postalCode: { type: String, required: true, trim: true },
+    city: { type: String, trim: true },
+    postalCode: { type: String, trim: true },
     items: { type: [orderItemSchema], required: true },
     subtotal: { type: Number, required: true, min: 0 },
     deliveryFee: { type: Number, required: true, min: 0 },
