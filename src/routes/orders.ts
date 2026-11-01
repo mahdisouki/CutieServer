@@ -30,7 +30,7 @@ const checkoutBody = z
 const directBody = z
   .object({
     name: z.string().trim().min(1),
-    phone: z.string().trim().min(8, "Phone number is too short"),
+    phone: z.string().trim().regex(/^\d{8}$/, "Phone number must be 8 digits"),
     address: z.string().trim().min(1),
     items: orderItems,
   })
