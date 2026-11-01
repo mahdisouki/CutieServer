@@ -110,6 +110,14 @@ export type OrderDocument = InferSchemaType<typeof orderSchema> & {
   createdAt: Date;
 };
 
+const presenceSchema = new mongoose.Schema({
+  visitorId: { type: String, required: true, unique: true },
+  city: { type: String, default: null },
+  country: { type: String, default: null },
+  lastSeen: { type: Date, required: true },
+});
+
 export const Product = mongoose.model("Product", productSchema);
 export const Order = mongoose.model("Order", orderSchema);
 export const Admin = mongoose.model("Admin", adminSchema);
+export const Presence = mongoose.model("Presence", presenceSchema);
